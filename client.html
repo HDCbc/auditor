@@ -1,0 +1,42 @@
+<!DOCTYPE Html>
+<html>
+<head>
+  <script
+    src="https://code.jquery.com/jquery-2.2.4.min.js"
+    integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+    crossorigin="anonymous"></script>
+</head>
+<body>
+  <table id="indicator-table">
+  </table>
+   <ul id="eventlist"> </ul>
+
+   <script>
+    //var eventList = document.getElementById("eventlist");
+    var evtSource = new EventSource("http://localhost:4000/msg");
+
+    var newElement = document.createElement("li");
+    newElement.innerHTML = "Indicators:";
+    //eventList.appendChild(newElement);
+
+
+    evtSource.onmessage = function(e) {
+      const data = e.data.split('|');
+      if($('#indicator-table td:contains(' + data[0] + ')').length > 0) {
+        $('#indicator-table td:contains(' + data[0] + ')').closest('td').next().text(data[1] + 'ms');
+      } else {
+          $('#indicator-table').append('<tr><td>' + data[0] + '</td><td></td></tr>')
+      }
+
+    };
+
+    evtSource.onerror = function(e) {
+        console.log("EventSource failed.");
+    };
+
+    console.log(evtSource);
+
+    </script>
+
+</body>
+</html>
