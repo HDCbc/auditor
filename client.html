@@ -1,41 +1,205 @@
-<!DOCTYPE Html>
+<!DOCTYPE html>
 <html>
 <head>
-  <script
-    src="https://code.jquery.com/jquery-2.2.4.min.js"
-    integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
-    crossorigin="anonymous"></script>
+  <!-- Javascript files -->
+  <script src="//code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.15/js/dataTables.bootstrap.min.js"></script>
+  <script src="https://cdn.datatables.net/fixedheader/3.1.2/js/dataTables.fixedHeader.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/2.1.1/js/dataTables.responsive.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/2.1.1/js/responsive.bootstrap.min.js"></script>
+
+  <!-- Css files -->
+  <!--<link href="https://cdn.datatables.net/1.10.15/css/jquery.dataTables.min.css" rel="stylesheet"/>-->
+  <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/fixedheader/3.1.2/css/fixedHeader.bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/responsive/2.1.1/css/responsive.bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    #indicator-table_wrapper {
+      margin-top:10px;
+    }
+    tr.danger {
+      background-color:#F2DEDE;
+    }
+    tr.warning {
+      background-color: #FCF8E3;
+    }
+  </style>
 </head>
 <body>
-  <table id="indicator-table">
-  </table>
-   <ul id="eventlist"> </ul>
+  <div class="container">
+    <div class="row">
+      <h2></h2>
+    </div>
+    <div class="row">
+      <div class="col-md-5">
+        <form class="form-inline">
+        	<div class="form-group">
+        		<label for="clinic" class="control-label">Clinic</label>
+        		<input type="text" class="form-control" id="clinic" name="clinic_name" placeholder="blank">
+        	</div>
+        </form>
+      </div>
+      <div class="col-md-5">
+        <form class="form-inline">
+        	<div class="form-group">
+        		<label for="provider" class="control-label">Provider</label>
+        		<input type="text" class="form-control" id="provider" name="provider_name" placeholder="blank">
+        	</div>
+        </form>
+      </div>
+      <div class="col-md-2">
+        <div class="form-group">
+          <button id="go-time" type="submit" class="btn btn-success pull-right">Run</button>
+        </div>
+      </div>
+    </div>
+    <hr/>
+    <div class="row">
+      <div class="col-xs-12 ">
+        <table id="indicator-table" class="table-bordered">
+          <thead>
+            <tr>
+              <th>Indicator</th>
+              <th>Execution Time</th>
+              <th>Numerator</th>
+              <th>Denominator</th>
+              <th>Errors</th>
+            </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <p class="runTime pull-right"></p>
+    </div>
+  </div>
 
    <script>
-    //var eventList = document.getElementById("eventlist");
-    var evtSource = new EventSource("http://localhost:4000/msg");
+      // Helper function to add thousands separators to numbers
+      const numberWithCommas = function numberWithCommas(x) {
+       if (x !== null && x !== undefined && x && !isNaN(x)) {
+         x = Math.round(x);
+         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+       }
+       return x;
+      };
 
-    var newElement = document.createElement("li");
-    newElement.innerHTML = "Indicators:";
-    //eventList.appendChild(newElement);
-
-
-    evtSource.onmessage = function(e) {
-      const data = e.data.split('|');
-      if($('#indicator-table td:contains(' + data[0] + ')').length > 0) {
-        $('#indicator-table td:contains(' + data[0] + ')').closest('td').next().text(data[1] + 'ms');
-      } else {
-          $('#indicator-table').append('<tr><td>' + data[0] + '</td><td></td></tr>')
+      function msToTime(ms){
+        var secs = Math.floor(ms / 1000);
+        var msleft = ms % 1000;
+        var hours = Math.floor(secs / (60 * 60));
+        var divisor_for_minutes = secs % (60 * 60);
+        var minutes = Math.floor(divisor_for_minutes / 60);
+        var divisor_for_seconds = divisor_for_minutes % 60;
+        var seconds = Math.ceil(divisor_for_seconds);
+        return hours + "h " + minutes + "m " + seconds  + "s";
       }
 
-    };
+      /* Create an array with the values of all the input boxes in a column, parsed as numbers */
+      $.fn.dataTable.ext.order['dom-ms'] = function  ( settings, col )
+      {
+        return this.api().column( col, {order:'index'} ).nodes().map( function ( td, i ) {
+          return $(td).text().substring(0, $(td).text().length - 2) * 1;
+        } );
+      }
 
-    evtSource.onerror = function(e) {
-        console.log("EventSource failed.");
-    };
+      // Create datatables
+      var table = $('#indicator-table').DataTable({
+        paging: false,
+        info: false,
+        responsive: true,
+        'createdRow': function(row, data, index) {
+          $('td', row).eq(1).addClass('timing');
+          $('td', row).eq(2).addClass('numerator');
+          $('td', row).eq(3).addClass('denominator');
+          $('td', row).eq(4).addClass('error');
+        },
+        'columns': [{
+            width: '10%',
+          },
+          {
+            width: '10%',
+            orderDataType: 'dom-ms',
+          },
+          {
+            width: '10%',
+          },
+          {
+            width: '10%',
+          },
+          {
+            width: '60%',
+          }],
+      });
 
-    console.log(evtSource);
+      new $.fn.dataTable.FixedHeader( table );
 
+      $('#go-time').on('click', function(e) {
+        if($(e.currentTarget).text() == 'Run') {
+          $(e.currentTarget).removeClass('btn-success').addClass('btn-danger').text('Running').attr("disabled", "disabled");
+
+          var provider = $('#provider').val();
+          var clinic = $('#clinic').val();
+
+          var evtSource = new EventSource("http://localhost:4000/msg?provider=" + provider + "&clinic=" + clinic);
+
+          evtSource.onmessage = function(e) {
+            // prepended tilda indicates this is for logging to the browser
+            if(e.data.substring(0,1) == '~') {
+              const data = e.data.substring(1).split('|');
+              // find the indicator row if it exists
+              var $indicatorRow = $('#indicator-table td:contains(' + data[0] + ')');
+              if($indicatorRow.length > 0) {
+                // update the time
+                if(typeof data[1] !== 'undefined' && data[1] !== 'undefined' && data[1] !== '') {
+                  $indicatorRow.siblings('.timing').text(numberWithCommas(data[1]) + 'ms');
+                  // $indicatorRow.siblings('.timing').attr('data-order', data[1]);
+
+                  switch(true) {
+                    case (data[1] > 20000): /* over 10 seconds */
+                      $indicatorRow.parent().addClass('danger');
+                      break;
+                    case (data[1] > 10000): /* over 5 seconds */
+                      $indicatorRow.parent().addClass('warning');
+                      break;
+                  }
+                }
+
+                // update the numerator
+                if(typeof data[2] !== 'undefined' && data[2] !== 'undefined') {
+                  $indicatorRow.siblings('.numerator').text(numberWithCommas(data[2]));
+                }
+
+                // update the denominator
+                if(typeof data[3] !== 'undefined' && data[3] !== 'undefined') {
+                  $indicatorRow.siblings('.denominator').text(numberWithCommas(data[3]));
+                }
+
+                // update the error
+                if(typeof data[4] !== 'undefined' && data[4] !== 'null') {
+                  $indicatorRow.siblings('.error').text(data[4]);
+                }
+
+              } else {
+                table.row.add([data[0],'','','','']).draw(false);
+              }
+            } else if(e.data.substring(0,1) == '*') {
+              var runTime = e.data.substring(1);
+              evtSource.close();
+              $('#go-time').removeClass('btn-danger').addClass('btn-success').text('Run').removeAttr('disabled');
+              $('p.runTime').text('Total Run Time: ' + msToTime(runTime));
+            }
+
+          };
+        }
+
+        evtSource.onerror = function(e) {
+            console.log("EventSource failed.");
+        };
+      });
     </script>
 
 </body>

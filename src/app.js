@@ -20,17 +20,6 @@ const vault = require('./vault');
  * @module app
  */
 module.exports = (function app() {
-  /**
-   * This function opens a local browser window
-   */
-  function setupHttp(callback) {
-    // open a browser window
-    // opn('http://localhost:56304');
-
-    //start web server
-
-    return callback();
-  }
 
   /**
    * This function will perform the specified queries against the Universal Schema. The queries
@@ -57,9 +46,7 @@ module.exports = (function app() {
 
   function run() {
     // logger.info('app.run()');
-
     async.waterfall([
-      // setupHttp,
       vault.retrieveIndicatorsQuery,
       queryPerform,
     ], (err) => {

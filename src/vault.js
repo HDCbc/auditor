@@ -67,12 +67,13 @@ module.exports = (function vault() {
 
     // start timer and reference with indicator xml name
     timers[query.indicator]  = new Date();
-    console.log(query.indicator);
+    console.log(`SELECT * FROM api.perform_aggregate_query('${query.indicator}','${query.clinic}','${query.provider}','${query.effectiveDate}')`);
+    console.log(`~${query.indicator}`);
 
     db.runQuery(dbQuery, dbParams, 'All', (error, row) => {
       // stop timer
       const executionTime = new Date() - timers[query.indicator];
-      console.log(`${query.indicator}|${executionTime}`);
+      console.log(`~${query.indicator}|${executionTime}`);
 
       // Sanitize the return rows to ensure that only aggregate data is returned.
       const results = sanitizeAggregate(row);
@@ -80,6 +81,7 @@ module.exports = (function vault() {
       // first parameter of the callback, we are including it in the results
       // object. This is because we are running a bunch of queries at the same
       // time and if an error is returned then they will all instantly stop.
+      console.log(`~${query.indicator}||${results.numerator}|${results.denominator}|${error}`);
       callback(null, { query, error, results});
     });
   }
@@ -103,8 +105,8 @@ module.exports = (function vault() {
 
           indicators.push({
               indicator: obj[prop],
-              clinic: '',
-              provider: '',
+              clinic: process.argv[3] || '',
+              provider: process.argv[2] || '',
               effectiveDate: '2017-01-01',
           });
         }

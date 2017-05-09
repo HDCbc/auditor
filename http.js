@@ -10,14 +10,18 @@ app.use(express.static(__dirname));
 app.listen(4000);
 
 // open a browser window
-opn('http://localhost:4000/client.html');
+// opn('http://localhost:4000/client.html', {app: ['C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe']});
 
 app.get('/msg', function(req, res){
+  const provider = req.query.provider;
+  const clinic = req.query.clinic;
 
   res.writeHead(200, { "Content-Type": "text/event-stream",
                        "Cache-control": "no-cache" });
 
-  const child = exec('node ./index.js');
+  const start = new Date();
+
+  const child = exec(`node ./index.js ${provider} ${clinic}`);
   let str = "";
 
   child.stdout.on('data', function (data) {
@@ -36,8 +40,12 @@ app.get('/msg', function(req, res){
       }
   });
 
+  // close the connection when auditing is finished
   child.on('close', function (code) {
-    //  res.end(str);
+    const runTime = new Date() - start;
+    console.log('runTime: ', runTime, 'ms');
+    res.write('data: *' + runTime + "\n\n");
+    //process.exit(0);
   });
 
   child.stderr.on('data', function (data) {
@@ -58,3 +66,16 @@ app.get('/msg', function(req, res){
     }
   });
 });
+
+console.log('Web server running...')
+
+function getQueryVariable(query, variable) {
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+        if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1]);
+        }
+    }
+    console.log('Query variable %s not found', variable);
+}
