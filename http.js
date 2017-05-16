@@ -67,7 +67,7 @@ app.get('/msg', function(req, res){
   });
 });
 
-console.log('Web server running...')
+console.log('Web server running @ http://localhost:4000/client.html');
 
 function getQueryVariable(query, variable) {
     var vars = query.split('&');
