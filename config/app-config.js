@@ -6,5 +6,5 @@ module.exports = {
   /**
    * The number of queries to run against the Universal Schema in parallel.
    */
-  maxParallelQueries: 20,
+  maxParallelQueries: 5,
 };

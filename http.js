@@ -13,6 +13,7 @@ app.listen(4000);
 // opn('http://localhost:4000/client.html', {app: ['C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe']});
 
 app.get('/msg', function(req, res){
+  console.log('Web call recieved /msg, starting database calls');
   const provider = req.query.provider;
   const clinic = req.query.clinic;
 

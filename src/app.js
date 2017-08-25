@@ -34,7 +34,7 @@ module.exports = (function app() {
    * @returns {void}
    */
   function queryPerform(queryList, callback) {
-    // logger.info('app.queryPerform()');
+    logger.info('app.queryPerform()');
 
     const limit = config.maxParallelQueries;
 
@@ -45,7 +45,7 @@ module.exports = (function app() {
   }
 
   function run() {
-    // logger.info('app.run()');
+    logger.info('app.run()');
     async.waterfall([
       vault.retrieveIndicatorsQuery,
       queryPerform,

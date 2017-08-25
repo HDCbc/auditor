@@ -56,7 +56,7 @@ module.exports = (function vault() {
   function performAggregateQuery(query, callback) {
     // logger.info('vault.performAggregateQuery()');
 
-    const dbQuery = 'SELECT * FROM api.perform_aggregate_query(p_indicator:=$1, p_clinic:=$2, p_provider:=$3, p_effective_date:=$4);';
+    const dbQuery = 'SELECT * FROM api.aggregate(p_indicator:=$1, p_clinic:=$2, p_provider:=$3, p_effective_date:=$4);';
 
     const dbParams = [
       query.indicator,
@@ -67,7 +67,7 @@ module.exports = (function vault() {
 
     // start timer and reference with indicator xml name
     timers[query.indicator]  = new Date();
-    console.log(`SELECT * FROM api.perform_aggregate_query('${query.indicator}','${query.clinic}','${query.provider}','${query.effectiveDate}')`);
+    console.log(`SELECT * FROM api.aggregate('${query.indicator}','${query.clinic}','${query.provider}','${query.effectiveDate}')`);
     console.log(`~${query.indicator}`);
 
     db.runQuery(dbQuery, dbParams, 'All', (error, row) => {
@@ -92,6 +92,10 @@ module.exports = (function vault() {
     const dbQuery = `SELECT routines.routine_name FROM information_schema.routines WHERE routines.specific_schema='${'indicator'}'`;
 
     db.runQuery(dbQuery, [], 'All', (error, results) => {
+      if(error) {
+        console.log('DB ERROR: ', error);
+      }
+
       let indicators = [];
 
       for (var key in results) {
@@ -111,7 +115,7 @@ module.exports = (function vault() {
           });
         }
       }
-
+      console.log('INFO: found all indicators:', indicators);
       callback(null, indicators);
     });
   }

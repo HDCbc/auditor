@@ -8,7 +8,7 @@ const config = require('../config/vault-config');
  */
 module.exports = (function databaseModule() {
   // Initialize the pool of connections that will be used to connect to the database.
-  const pool = new pg.Pool(config.connection);
+  const pool = new pg.Pool(config.endpoint);
 
   /**
    * If a client is idle in the pool and receives an error (for example when Postgres restarts),
