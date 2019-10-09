@@ -1,5 +1,4 @@
 const express = require("express");
-const opn = require('opn');
 
 // Initialize express application
 const app = express();
